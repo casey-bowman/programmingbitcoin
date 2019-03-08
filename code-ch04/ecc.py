@@ -163,6 +163,9 @@ class Point:
     def __repr__(self):
         if self.x is None:
             return 'Point(infinity)'
+        elif isinstance(self.x, FieldElement):
+            return 'Point({},{})_{}_{} FieldElement({})'.format(
+                self.x.num, self.y.num, self.a.num, self.b.num, self.x.prime)
         else:
             return 'Point({},{})_{}_{}'.format(self.x, self.y, self.a, self.b)
 
@@ -180,7 +183,6 @@ class Point:
         # Result is point at infinity
         if self.x == other.x and self.y != other.y:
             return self.__class__(None, None, self.a, self.b)
-
 
         # Case 2: self.x ≠ other.x
         # Formula (x3,y3)==(x1,y1)+(x2,y2)
@@ -355,7 +357,7 @@ class ECCTest(TestCase):
 A = 0
 B = 7
 P = 2**256 - 2**32 - 977
-N = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
+N = 0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141
 
 
 class S256Field(FieldElement):
@@ -366,8 +368,10 @@ class S256Field(FieldElement):
     def __repr__(self):
         return '{:x}'.format(self.num).zfill(64)
 
+    # tag::source2[]
     def sqrt(self):
         return self**((P + 1) // 4)
+    # end::source2[]
 
 
 class S256Point(Point):
@@ -383,7 +387,7 @@ class S256Point(Point):
         if self.x is None:
             return 'S256Point(infinity)'
         else:
-            return 'S256Point({},{})'.format(self.x, self.y)
+            return 'S256Point({}, {})'.format(self.x, self.y)
 
     def __rmul__(self, coefficient):
         coef = coefficient % N
@@ -400,20 +404,20 @@ class S256Point(Point):
         total = u * G + v * self
         return total.x.num == sig.r
 
+    # tag::source1[]
     def sec(self, compressed=True):
-        # returns the binary version of the sec format, NOT hex
-        # if compressed, starts with b'\x02' if self.y.num is even, b'\x03' if self.y is odd
-        # then self.x.num
-        # remember, you have to convert self.x.num/self.y.num to binary (some_integer.to_bytes(32, 'big'))
+        '''returns the binary version of the SEC format'''
         if compressed:
             if self.y.num % 2 == 0:
                 return b'\x02' + self.x.num.to_bytes(32, 'big')
             else:
                 return b'\x03' + self.x.num.to_bytes(32, 'big')
         else:
-            # if non-compressed, starts with b'\x04' followod by self.x and then self.y
-            return b'\x04' + self.x.num.to_bytes(32, 'big') + self.y.num.to_bytes(32, 'big')
+            return b'\x04' + self.x.num.to_bytes(32, 'big') + \
+                self.y.num.to_bytes(32, 'big')
+    # end::source1[]
 
+    # tag::source5[]
     def hash160(self, compressed=True):
         return hash160(self.sec(compressed))
 
@@ -425,22 +429,23 @@ class S256Point(Point):
         else:
             prefix = b'\x00'
         return encode_base58_checksum(prefix + h160)
+    # end::source5[]
 
+    # tag::source3[]
     @classmethod
     def parse(self, sec_bin):
-        '''returns a Point object from a compressed sec binary (not hex)
-        '''
-        if sec_bin[0] == 4:
+        '''returns a Point object from a SEC binary (not hex)'''
+        if sec_bin[0] == 4:  # <1>
             x = int.from_bytes(sec_bin[1:33], 'big')
             y = int.from_bytes(sec_bin[33:65], 'big')
             return S256Point(x=x, y=y)
-        is_even = sec_bin[0] == 2
+        is_even = sec_bin[0] == 2  # <2>
         x = S256Field(int.from_bytes(sec_bin[1:], 'big'))
         # right side of the equation y^2 = x^3 + 7
         alpha = x**3 + S256Field(B)
         # solve for left side
-        beta = alpha.sqrt()
-        if beta.num % 2 == 0:
+        beta = alpha.sqrt()  # <3>
+        if beta.num % 2 == 0:  # <4>
             even_beta = beta
             odd_beta = S256Field(P - beta.num)
         else:
@@ -450,6 +455,7 @@ class S256Point(Point):
             return S256Point(x, even_beta)
         else:
             return S256Point(x, odd_beta)
+    # end::source3[]
 
 
 G = S256Point(
@@ -549,6 +555,7 @@ class Signature:
     def __repr__(self):
         return 'Signature({:x},{:x})'.format(self.r, self.s)
 
+    # tag::source4[]
     def der(self):
         rbin = self.r.to_bytes(32, byteorder='big')
         # remove all null bytes at the beginning
@@ -565,6 +572,7 @@ class Signature:
             sbin = b'\x00' + sbin
         result += bytes([2, len(sbin)]) + sbin
         return bytes([0x30, len(result)]) + result
+    # end::source4[]
 
     @classmethod
     def parse(cls, signature_bin):
@@ -649,21 +657,19 @@ class PrivateKey:
             k = hmac.new(k, v + b'\x00', s256).digest()
             v = hmac.new(k, v, s256).digest()
 
+    # tag::source6[]
     def wif(self, compressed=True, testnet=False):
-        # convert the secret from integer to a 32-bytes in big endian using num.to_bytes(32, 'big')
         secret_bytes = self.secret.to_bytes(32, 'big')
-        # prepend b'\xef' on testnet, b'\x80' on mainnet
         if testnet:
             prefix = b'\xef'
         else:
             prefix = b'\x80'
-        # append b'\x01' if compressed
         if compressed:
             suffix = b'\x01'
         else:
             suffix = b''
-        # encode_base58_checksum the whole thing
         return encode_base58_checksum(prefix + secret_bytes + suffix)
+    # end::source6[]
 
 
 class PrivateKeyTest(TestCase):

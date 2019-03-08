@@ -26,19 +26,20 @@ class MerkleTree:
         self.current_index = 0
 
     def __repr__(self):  # <2>
-        result = ''
+        result = []
         for depth, level in enumerate(self.nodes):
+            items = []
             for index, h in enumerate(level):
                 if h is None:
                     short = 'None'
                 else:
                     short = '{}...'.format(h.hex()[:8])
                 if depth == self.current_depth and index == self.current_index:
-                    result += '*{}*, '.format(short[:-2])
+                    items.append('*{}*'.format(short[:-2]))
                 else:
-                    result += '{}, '.format(short)
-            result += '\n'
-        return result
+                    items.append('{}'.format(short))
+            result.append(', '.join(items))
+        return '\n'.join(result)
     # end::source1[]
 
     # tag::source2[]
@@ -73,7 +74,8 @@ class MerkleTree:
         return self.current_depth == self.max_depth
 
     def right_exists(self):  # <3>
-        return len(self.nodes[self.current_depth + 1]) > self.current_index * 2 + 1
+        return len(self.nodes[self.current_depth + 1]) > \
+            self.current_index * 2 + 1
     # end::source2[]
 
     # tag::source3[]
@@ -96,7 +98,8 @@ class MerkleTree:
                     if right_hash is None:  # <9>
                         self.right()
                     else:  # <10>
-                        self.set_current_node(merkle_parent(left_hash, right_hash))
+                        self.set_current_node(merkle_parent(left_hash, 
+                        right_hash))
                         self.up()
                 else:  # <11>
                     self.set_current_node(merkle_parent(left_hash, left_hash))
@@ -107,6 +110,7 @@ class MerkleTree:
             if flag_bit != 0:
                 raise RuntimeError('flag bits not all consumed')
     # end::source3[]
+
 
 class MerkleTreeTest(TestCase):
 

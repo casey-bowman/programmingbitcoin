@@ -6,7 +6,7 @@ import hashlib
 SIGHASH_ALL = 1
 SIGHASH_NONE = 2
 SIGHASH_SINGLE = 3
-BASE58_ALPHABET = b'123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
 TWO_WEEKS = 60 * 60 * 24 * 14
 MAX_TARGET = 0xffff * 256**(0x1d - 3)
 
@@ -39,29 +39,29 @@ def encode_base58(s):
             count += 1
         else:
             break
-    prefix = b'1' * count
-    # convert from binary to hex, then hex to integer
-    num = int(s.hex(), 16)
-    result = bytearray()
+    # convert to big endian integer
+    num = int.from_bytes(s, 'big')
+    prefix = '1' * count
+    result = ''
     while num > 0:
         num, mod = divmod(num, 58)
-        result.insert(0, BASE58_ALPHABET[mod])
-    return prefix + bytes(result)
+        result = BASE58_ALPHABET[mod] + result
+    return prefix + result
 
 
 def encode_base58_checksum(s):
-    return encode_base58(s + hash256(s)[:4]).decode('ascii')
+    return encode_base58(s + hash256(s)[:4])
 
 
 def decode_base58(s):
     num = 0
-    for c in s.encode('ascii'):
+    for c in s:
         num *= 58
         num += BASE58_ALPHABET.index(c)
     combined = num.to_bytes(25, byteorder='big')
     checksum = combined[-4:]
     if hash256(combined[:-4])[:4] != checksum:
-        raise ValueError('bad address: {} {}'.format(checksum, hash256(combined)[:4]))
+        raise ValueError('bad address: {} {}'.format(checksum, hash256(combined[:-4])[:4]))
     return combined[1:-4]
 
 
@@ -154,9 +154,9 @@ def target_to_bits(target):
         exponent = len(raw_bytes)
         # coefficient is the first 3 digits of the base-256 number
         coefficient = raw_bytes[:3]
-    new_bits_big_endian = bytes([exponent]) + coefficient
     # we've truncated the number after the first 3 digits of base-256
-    return new_bits_big_endian[::-1]
+    new_bits = coefficient[::-1] + bytes([exponent])
+    return new_bits
 
 
 def calculate_new_bits(previous_bits, time_differential):

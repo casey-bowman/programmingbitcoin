@@ -41,7 +41,8 @@ class TxFetcher:
             else:
                 tx = Tx.parse(BytesIO(raw), testnet=testnet)
             if tx.id() != tx_id:  # <1>
-                raise ValueError('not the same id: {} vs {}'.format(tx.id(), tx_id))
+                raise ValueError('not the same id: {} vs {}'.format(tx.id(), 
+                                  tx_id))
             cls.cache[tx_id] = tx
         cls.cache[tx_id].testnet = testnet
         return cls.cache[tx_id]
@@ -85,7 +86,7 @@ class Tx:
         tx_outs = ''
         for tx_out in self.tx_outs:
             tx_outs += tx_out.__repr__() + '\n'
-        return 'tx: {}\nversion: {}\ntx_ins:\n{}\ntx_outs:\n{}\nlocktime: {}\n'.format(
+        return 'tx: {}\nversion: {}\ntx_ins:\n{}tx_outs:\n{}locktime: {}'.format(
             self.id(),
             self.version,
             tx_ins,
@@ -185,15 +186,15 @@ class TxIn:
         return TxFetcher.fetch(self.prev_tx.hex(), testnet=testnet)
 
     def value(self, testnet=False):
-        '''Get the outpoint value by looking up the tx hash
-        Returns the amount in satoshi
+        '''Get the output value by looking up the tx hash.
+        Returns the amount in satoshi.
         '''
         tx = self.fetch_tx(testnet=testnet)
         return tx.tx_outs[self.prev_index].amount
 
     def script_pubkey(self, testnet=False):
-        '''Get the ScriptPubKey by looking up the tx hash
-        Returns a Script object
+        '''Get the ScriptPubKey by looking up the tx hash.
+        Returns a Script object.
         '''
         tx = self.fetch_tx(testnet=testnet)
         return tx.tx_outs[self.prev_index].script_pubkey
@@ -228,6 +229,7 @@ class TxOut:
         result += self.script_pubkey.serialize()
         return result
     # end::source4[]
+
 
 class TxTest(TestCase):
     cache_file = '../tx.cache'

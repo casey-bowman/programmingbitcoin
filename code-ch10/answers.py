@@ -1,9 +1,31 @@
-from io import BytesIO
+'''
+# tag::exercise2[]
+==== Exercise 2
+
+Determine what this network message is:
+
+----
+f9beb4d976657261636b000000000000000000005df6e0e2
+----
+# end::exercise2[]
+# tag::answer2[]
+>>> from network import NetworkEnvelope
+>>> from io import BytesIO
+>>> message_hex = `f9beb4d976657261636b000000000000000000005df6e0e2`
+>>> stream = BytesIO(bytes.fromhex(message_hex))
+>>> envelope = NetworkEnvelope.parse(stream)
+>>> print(envelope.command)
+b'verack'
+>>> print(envelope.payload)
+b''
+
+# end::answer2[]
+'''
+
+
 from unittest import TestCase
 
-from block import GENESIS_BLOCK_HASH
 from helper import (
-    calculate_new_bits,
     encode_varint,
     hash256,
     int_to_little_endian,
@@ -11,7 +33,6 @@ from helper import (
 )
 from network import (
     GetHeadersMessage,
-    HeadersMessage,
     NetworkEnvelope,
     SimpleNode,
     VersionMessage,
@@ -23,34 +44,17 @@ from network import (
 
 methods = []
 
-"""
+
+'''
 # tag::exercise1[]
 ==== Exercise 1
 
-Determine what this network message is:
-
-`f9beb4d976657261636b000000000000000000005df6e0e2`
-# end::exercise1[]
-# tag::answer1[]
->>> from network import NetworkEnvelope
->>> from io import BytesIO
->>> message_hex = 'f9beb4d976657261636b000000000000000000005df6e0e2'
->>> stream = BytesIO(bytes.fromhex(message_hex))
->>> envelope = NetworkEnvelope.parse(stream)
->>> print(envelope.command)
-b'verack'
->>> print(envelope.payload)
-b''
-
-# end::answer1[]
-# tag::exercise2[]
-==== Exercise 2
-
 Write the `parse` method for `NetworkEnvelope`.
-# end::exercise2[]
-"""
+# end::exercise1[]
+'''
 
-# tag::answer2[]
+
+# tag::answer1[]
 @classmethod
 def parse(cls, s, testnet=False):
     magic = s.read(4)
@@ -61,7 +65,8 @@ def parse(cls, s, testnet=False):
     else:
         expected_magic = NETWORK_MAGIC
     if magic != expected_magic:
-        raise SyntaxError('magic is not right {} vs {}'.format(magic.hex(), expected_magic.hex()))
+        raise SyntaxError('magic is not right {} vs {}'.format(magic.hex(), 
+          expected_magic.hex()))
     command = s.read(12)
     command = command.strip(b'\x00')
     payload_length = little_endian_to_int(s.read(4))
@@ -71,15 +76,17 @@ def parse(cls, s, testnet=False):
     if calculated_checksum != checksum:
         raise IOError('checksum does not match')
     return cls(command, payload, testnet=testnet)
-# end::answer2[]
+# end::answer1[]
 
-"""
+
+'''
 # tag::exercise3[]
 ==== Exercise 3
 
 Write the `serialize` method for `NetworkEnvelope`.
 # end::exercise3[]
-"""
+'''
+
 
 # tag::answer3[]
 def serialize(self):
@@ -90,15 +97,19 @@ def serialize(self):
     result += self.payload
     return result
 # end::answer3[]
+
+
 methods.append(serialize)
 
-"""
+
+'''
 # tag::exercise4[]
 ==== Exercise 4
 
 Write the `serialize` method for `VersionMessage`.
 # end::exercise4[]
-"""
+'''
+
 
 # tag::answer4[]
 def serialize(self):
@@ -121,15 +132,19 @@ def serialize(self):
         result += b'\x00'
     return result
 # end::answer4[]
+
+
 methods.append(serialize)
 
-"""
+
+'''
 # tag::exercise5[]
 ==== Exercise 5
 
-Write the `handshake` method for `SimpleNode`
+Write the `handshake` method for `SimpleNode`.
 # end::exercise5[]
-"""
+'''
+
 
 # tag::answer5[]
 def handshake(self):
@@ -138,13 +153,15 @@ def handshake(self):
     self.wait_for(VerAckMessage)
 # end::answer5[]
 
-"""
+
+'''
 # tag::exercise6[]
 ==== Exercise 6
 
 Write the `serialize` method for `GetHeadersMessage`.
 # end::exercise6[]
-"""
+'''
+
 
 # tag::answer6[]
 def serialize(self):
@@ -154,10 +171,12 @@ def serialize(self):
     result += self.end_block[::-1]
     return result
 # end::answer6[]
+
+
 methods.append(serialize)
 
 
-class Chapter10Test(TestCase):
+class ChapterTest(TestCase):
 
     def test_apply(self):
         NetworkEnvelope.parse = parse

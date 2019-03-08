@@ -7,7 +7,7 @@
 >>> y = FieldElement(num=105, prime=223)
 >>> p1 = Point(x, y, a, b)
 >>> print(p1)
-Point(FieldElement_223(192),FieldElement_223(105))_FieldElement_223(0)_FieldElement_223(7)
+Point(192,105)_0_7 FieldElement(223)
 
 # end::example1[]
 # tag::example3[]
@@ -22,7 +22,7 @@ Point(FieldElement_223(192),FieldElement_223(105))_FieldElement_223(0)_FieldElem
 >>> p1 = Point(x1, y1, a, b)
 >>> p2 = Point(x2, y2, a, b)
 >>> print(p1+p2)
-Point(FieldElement_223(170),FieldElement_223(142))_FieldElement_223(0)_FieldElement_223(7)
+Point(170,142)_0_7 FieldElement(223)
 
 # end::example3[]
 # tag::example4[]
@@ -125,7 +125,7 @@ True
 >>> s = (z+r*e) * k_inv % N  # <5>
 >>> point = e*G  # <6>
 >>> print(point)
-S256Point(028d003eab2e428d11983f3e97c3fa0addf3b42740df0d211795ffb3be2f6c52,
+S256Point(028d003eab2e428d11983f3e97c3fa0addf3b42740df0d211795ffb3be2f6c52, \
 0ae987b9ec6ea159c78cb2a937ed89096fb218d9e7594f02b547526d8cd309e2)
 >>> print(hex(z))
 0x231c6f3d980a6b0fb7152f85cee7eb52bf92433d9919b9c5218cb08e79cce78

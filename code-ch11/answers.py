@@ -1,4 +1,28 @@
-import math
+'''
+# tag::answer5[]
+>>> import math
+>>> total = 27
+>>> max_depth = math.ceil(math.log(total, 2))
+>>> merkle_tree = []
+>>> for depth in range(max_depth + 1):
+...     num_items = math.ceil(total / 2**(max_depth - depth))
+...     level_hashes = [None] * num_items
+...     merkle_tree.append(level_hashes)
+>>> for level in merkle_tree:
+...     print(level)
+[None]
+[None, None]
+[None, None, None, None]
+[None, None, None, None, None, None, None]
+[None, None, None, None, None, None, None, None, None, None, None, None, None,\
+ None]
+[None, None, None, None, None, None, None, None, None, None, None, None, None,\
+ None, None, None, None, None, None, None, None, None, None, None, None, None,\
+ None]
+
+# end::answer5[]
+'''
+
 
 from unittest import TestCase
 
@@ -18,13 +42,14 @@ from merkleblock import (
 )
 
 
-"""
+'''
 # tag::exercise1[]
 ==== Exercise 1
 
 Write the `merkle_parent` function.
 # end::exercise1[]
-"""
+'''
+
 
 # tag::answer1[]
 def merkle_parent(hash1, hash2):
@@ -32,13 +57,15 @@ def merkle_parent(hash1, hash2):
     return hash256(hash1 + hash2)
 # end::answer1[]
 
-"""
+
+'''
 # tag::exercise2[]
 ==== Exercise 2
 
 Write the `merkle_parent_level` function.
 # end::exercise2[]
-"""
+'''
+
 
 # tag::answer2[]
 def merkle_parent_level(hashes):
@@ -55,13 +82,15 @@ def merkle_parent_level(hashes):
     return parent_level
 # end::answer2[]
 
-"""
+
+'''
 # tag::exercise3[]
 ==== Exercise 3
 
 Write the `merkle_root` function.
 # end::exercise3[]
-"""
+'''
+
 
 # tag::answer3[]
 def merkle_root(hashes):
@@ -69,17 +98,19 @@ def merkle_root(hashes):
     '''
     current_level = hashes
     while len(current_level) > 1:
-        current_level = merkle_parent_level(current_level)        
+        current_level = merkle_parent_level(current_level)
     return current_level[0]
 # end::answer3[]
 
-"""
+
+'''
 # tag::exercise4[]
 ==== Exercise 4
 
 Write the `validate_merkle_root` method for `Block`.
 # end::exercise4[]
-"""
+'''
+
 
 # tag::answer4[]
 def validate_merkle_root(self):
@@ -88,36 +119,22 @@ def validate_merkle_root(self):
     return root[::-1] == self.merkle_root
 # end::answer4[]
 
-"""
+
+'''
 # tag::exercise5[]
 ==== Exercise 5
 
 Create an empty Merkle Tree with 27 items and print each level.
 # end::exercise5[]
-# tag::answer5[]
->>> import math
->>> total = 27
->>> max_depth = math.ceil(math.log(total, 2))
->>> merkle_tree = []
->>> for depth in range(max_depth + 1): 
-...     num_items = math.ceil(total / 2**(max_depth - depth))
-...     level_hashes = [None] * num_items
-...     merkle_tree.append(level_hashes)
->>> for level in merkle_tree:
-...     print(level)
-[None]
-[None, None]
-[None, None, None, None]
-[None, None, None, None, None, None, None]
-[None, None, None, None, None, None, None, None, None, None, None, None, None, None]
-[None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, ..., None]
-# end::answer5[]
+'''
+'''
 # tag::exercise6[]
 ==== Exercise 6
 
 Write the `parse` method for `MerkleBlock`.
 # end::exercise6[]
-"""
+'''
+
 
 # tag::answer6[]
 @classmethod
@@ -129,9 +146,9 @@ def parse(cls, s):
     bits = s.read(4)
     nonce = s.read(4)
     total = little_endian_to_int(s.read(4))
-    num_txs = read_varint(s)
+    num_hashes = read_varint(s)
     hashes = []
-    for _ in range(num_txs):
+    for _ in range(num_hashes):
         hashes.append(s.read(32)[::-1])
     flags_length = read_varint(s)
     flags = s.read(flags_length)
@@ -139,13 +156,15 @@ def parse(cls, s):
                nonce, total, hashes, flags)
 # end::answer6[]
 
-"""
+
+'''
 # tag::exercise7[]
 ==== Exercise 7
 
-Write the `is_valid` method for `MerkleBlock`
+Write the `is_valid` method for `MerkleBlock`.
 # end::exercise7[]
-"""
+'''
+
 
 # tag::answer7[]
 def is_valid(self):
@@ -157,10 +176,9 @@ def is_valid(self):
 # end::answer7[]
 
 
-class Chapter11Test(TestCase):
+class ChapterTest(TestCase):
 
     def test_apply(self):
-
         helper.merkle_parent = merkle_parent
         merkleblock.merkle_parent = merkle_parent
         helper.merkle_parent_level = merkle_parent_level
